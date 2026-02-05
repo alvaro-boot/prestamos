@@ -18,11 +18,12 @@ const ClientesModule = {
         this.search
       );
 
+      const canEdit = Auth.canEdit();
       content.innerHTML = `
         <div class="toolbar">
           <input type="text" class="search-input" placeholder="Buscar por documento o nombre..." 
                  value="${this.escapeHtml(this.search)}" id="cliente-search">
-          <button class="btn btn-primary" id="btn-nuevo-cliente">+ Nuevo cliente</button>
+          ${canEdit ? '<button class="btn btn-primary" id="btn-nuevo-cliente">+ Nuevo cliente</button>' : ""}
         </div>
         <div class="table-container">
           <div class="table-wrapper">
@@ -59,6 +60,13 @@ const ClientesModule = {
   },
 
   rowCliente(c) {
+    const canEdit = Auth.canEdit();
+    const acciones = canEdit
+      ? `<div class="actions-buttons">
+          <button class="btn btn-secondary btn-sm btn-editar-cliente" data-id="${c.id}">Editar</button>
+          <button class="btn btn-danger btn-sm btn-eliminar-cliente" data-id="${c.id}">Eliminar</button>
+        </div>`
+      : '<span style="color:var(--color-text-muted)">Solo lectura</span>';
     return `
       <tr>
         <td>${c.id}</td>
@@ -66,12 +74,7 @@ const ClientesModule = {
         <td>${this.escapeHtml(c.nombre)}</td>
         <td>${this.escapeHtml(c.email || "-")}</td>
         <td>${this.escapeHtml(c.telefono || "-")}</td>
-        <td class="td-actions">
-          <div class="actions-buttons">
-            <button class="btn btn-secondary btn-sm btn-editar-cliente" data-id="${c.id}">Editar</button>
-            <button class="btn btn-danger btn-sm btn-eliminar-cliente" data-id="${c.id}">Eliminar</button>
-          </div>
-        </td>
+        <td class="td-actions">${acciones}</td>
       </tr>
     `;
   },

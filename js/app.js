@@ -10,34 +10,17 @@ const App = {
     this.bindSidebarToggle();
 
     if (Auth.checkAndRedirect()) {
+      this.updateNavByRole();
       const section = window.location.hash.slice(1) || "dashboard";
       this.loadSection(section);
     }
   },
 
   bindLogin() {
-    let isRegister = false;
-    const toggleAuth = () => {
-      isRegister = !isRegister;
-      document.getElementById("auth-subtitle").textContent = isRegister
-        ? "Crea tu cuenta para gestionar tus préstamos"
-        : "Ingresa tus credenciales para continuar";
-      document.getElementById("auth-submit").textContent = isRegister
-        ? "Registrarse"
-        : "Iniciar sesión";
-      const nombreGroup = document.getElementById("nombre-group");
-      const nombreInput = document.getElementById("nombre");
-      nombreGroup.style.display = isRegister ? "block" : "none";
-      nombreInput.required = isRegister;
-      document.getElementById("toggle-auth").innerHTML = isRegister
-        ? "¿Ya tienes cuenta? <strong>Inicia sesión</strong>"
-        : "¿No tienes cuenta? <strong>Regístrate aquí</strong>";
-      document.getElementById("login-error").classList.add("hidden");
-    };
-    document.getElementById("toggle-auth")?.addEventListener("click", (e) => {
-      e.preventDefault();
-      toggleAuth();
-    });
+    // Solo login: los usuarios son creados por el admin en la sección Usuarios
+    document.getElementById("nombre-group")?.remove();
+    const toggleEl = document.getElementById("toggle-auth");
+    if (toggleEl) toggleEl.closest(".auth-toggle")?.remove();
 
     document
       .getElementById("login-form")
@@ -46,7 +29,6 @@ const App = {
         const form = e.target;
         const email = form.email.value.trim();
         const password = form.password.value;
-        const nombre = form.nombre?.value?.trim();
         const errorEl = document.getElementById("login-error");
         const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -55,15 +37,10 @@ const App = {
         submitBtn.disabled = true;
 
         try {
-          if (isRegister) {
-            await Auth.register(email, password, nombre);
-            Auth.checkAndRedirect();
-            this.loadSection("clientes");
-          } else {
-            await Auth.login(email, password);
-            Auth.checkAndRedirect();
-            this.loadSection("clientes");
-          }
+          await Auth.login(email, password);
+          Auth.checkAndRedirect();
+          this.updateNavByRole();
+          this.loadSection("dashboard");
         } catch (err) {
           errorEl.textContent = err.message || "Error";
           errorEl.classList.remove("hidden");
@@ -115,7 +92,7 @@ const App = {
   },
 
   loadSection(section) {
-    const titles = { dashboard: "Dashboard", clientes: "Clientes", prestamos: "Préstamos" };
+    const titles = { dashboard: "Dashboard", clientes: "Clientes", prestamos: "Préstamos", usuarios: "Usuarios" };
     document.getElementById("page-title").textContent = titles[section] || "Dashboard";
 
     document.querySelectorAll(".nav-link").forEach((l) => {
@@ -128,7 +105,16 @@ const App = {
       ClientesModule.render();
     } else if (section === "prestamos") {
       PrestamosModule.render();
+    } else if (section === "usuarios") {
+      UsuariosModule.render();
     }
+  },
+
+  updateNavByRole() {
+    const isAdmin = Auth.isAdmin();
+    document.querySelectorAll(".nav-admin-only").forEach((el) => {
+      el.style.display = isAdmin ? "" : "none";
+    });
   },
 
   bindModal() {

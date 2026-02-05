@@ -77,6 +77,28 @@ const API = {
     return this.delete(`/clientes/${id}`);
   },
 
+  // Usuarios (solo ADMIN)
+  getUsuarios(page = 1, limit = 10) {
+    return this.get(`/usuarios?page=${page}&limit=${limit}`);
+  },
+  getUsuario(id) {
+    return this.get(`/usuarios/${id}`);
+  },
+  createUsuario(data) {
+    return this.post("/usuarios", data);
+  },
+  updateUsuario(id, data) {
+    return this.patch(`/usuarios/${id}`, data);
+  },
+  asignarRolesUsuario(id, rolIds) {
+    return this.patch(`/usuarios/${id}/roles`, { rol_ids: rolIds });
+  },
+
+  // Roles (solo ADMIN)
+  getRoles() {
+    return this.get("/roles");
+  },
+
   // Frecuencias de pago
   getFrecuenciasPago() {
     return this.get("/frecuencia-pago");

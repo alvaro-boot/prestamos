@@ -3,4 +3,5 @@ const CONFIG = {
   API_BASE_URL: "https://prestamos-back-end.onrender.com",
   TOKEN_KEY: "prestamos_token",
   USER_KEY: "prestamos_user",
+  ROLES_KEY: "prestamos_roles",
 };

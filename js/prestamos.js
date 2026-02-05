@@ -26,6 +26,7 @@ const PrestamosModule = {
         this.estado || undefined
       );
 
+      const canEdit = Auth.canEdit();
       content.innerHTML = `
         <div class="toolbar">
           <input type="text" class="search-input" placeholder="Buscar..." id="prestamo-search" style="display:none">
@@ -55,7 +56,7 @@ const PrestamosModule = {
               this.estado === "REFINANCIADO" ? "selected" : ""
             }>Refinanciado</option>
           </select>
-          <button class="btn btn-primary" id="btn-nuevo-prestamo">+ Nuevo préstamo</button>
+          ${canEdit ? '<button class="btn btn-primary" id="btn-nuevo-prestamo">+ Nuevo préstamo</button>' : ""}
         </div>
         <div class="prestamos-list">
           <div class="prestamos-table-wrap">
@@ -105,26 +106,28 @@ const PrestamosModule = {
       ? new Date(p.fechaCreacion).toLocaleDateString("es")
       : "-";
     const badgeClass = `badge-${(p.estado || "").toLowerCase()}`;
+    const canEdit = Auth.canEdit();
+    const acciones = canEdit
+      ? `<div class="actions-buttons">
+          <button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>
+          ${
+            p.estado === "ACTIVO" && Auth.canEdit()
+              ? `<button class="btn btn-primary btn-sm btn-registrar-pago" data-id="${p.id}">Reg. pago</button>
+            <button class="btn btn-secondary btn-sm btn-modificar-prestamo" data-id="${p.id}">Modificar</button>
+            <button class="btn btn-success btn-sm btn-saldar-prestamo" data-id="${p.id}" title="Marcar como pagado">Marcar pagado</button>`
+              : ""
+          }
+        </div>`
+      : `<div class="actions-buttons">
+          <button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>
+        </div>`;
     return `
       <tr>
         <td>${p.id}</td>
         <td>${this.escapeHtml(cliente)}</td>
-        <td><span class="badge ${badgeClass}">${this.escapeHtml(
-      p.estado
-    )}</span></td>
+        <td><span class="badge ${badgeClass}">${this.escapeHtml(p.estado)}</span></td>
         <td>${fecha}</td>
-        <td class="td-actions">
-          <div class="actions-buttons">
-            <button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>
-            ${
-              p.estado === "ACTIVO"
-                ? `<button class="btn btn-primary btn-sm btn-registrar-pago" data-id="${p.id}">Reg. pago</button>
-            <button class="btn btn-secondary btn-sm btn-modificar-prestamo" data-id="${p.id}">Modificar</button>
-            <button class="btn btn-success btn-sm btn-saldar-prestamo" data-id="${p.id}" title="Marcar como pagado">Marcar pagado</button>`
-                : ""
-            }
-          </div>
-        </td>
+        <td class="td-actions">${acciones}</td>
       </tr>
     `;
   },
@@ -135,6 +138,17 @@ const PrestamosModule = {
       ? new Date(p.fechaCreacion).toLocaleDateString("es")
       : "-";
     const badgeClass = `badge-${(p.estado || "").toLowerCase()}`;
+    const canEdit = Auth.canEdit();
+    const acciones = canEdit
+      ? `<button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>
+          ${
+            p.estado === "ACTIVO"
+              ? `<button class="btn btn-primary btn-sm btn-registrar-pago" data-id="${p.id}">Reg. pago</button>
+          <button class="btn btn-secondary btn-sm btn-modificar-prestamo" data-id="${p.id}">Modificar</button>
+          <button class="btn btn-success btn-sm btn-saldar-prestamo" data-id="${p.id}">Marcar pagado</button>`
+              : ""
+          }`
+      : `<button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>`;
     return `
       <div class="prestamo-list-card" data-id="${p.id}">
         <div class="prestamo-list-card-header">
@@ -152,14 +166,7 @@ const PrestamosModule = {
           </div>
         </div>
         <div class="prestamo-list-card-actions">
-          <button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>
-          ${
-            p.estado === "ACTIVO"
-              ? `<button class="btn btn-primary btn-sm btn-registrar-pago" data-id="${p.id}">Reg. pago</button>
-          <button class="btn btn-secondary btn-sm btn-modificar-prestamo" data-id="${p.id}">Modificar</button>
-          <button class="btn btn-success btn-sm btn-saldar-prestamo" data-id="${p.id}">Marcar pagado</button>`
-              : ""
-          }
+          ${acciones}
         </div>
       </div>
     `;
@@ -445,7 +452,7 @@ const PrestamosModule = {
         <div class="toolbar">
           <button class="btn btn-secondary" id="btn-volver-prestamos">← Volver a préstamos</button>
           ${
-            prestamo.estado === "ACTIVO"
+            prestamo.estado === "ACTIVO" && Auth.canEdit()
               ? `<button class="btn btn-primary" id="btn-registrar-pago-detalle">Registrar pago</button>
           <button class="btn btn-secondary" id="btn-modificar-detalle">Modificar plazo/cuotas</button>
           <button class="btn btn-success" id="btn-saldar-detalle">Marcar como pagado</button>`
