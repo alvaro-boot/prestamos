@@ -66,13 +66,11 @@ const ClientesModule = {
         <td>${this.escapeHtml(c.nombre)}</td>
         <td>${this.escapeHtml(c.email || "-")}</td>
         <td>${this.escapeHtml(c.telefono || "-")}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm btn-editar-cliente" data-id="${
-            c.id
-          }">Editar</button>
-          <button class="btn btn-danger btn-sm btn-eliminar-cliente" data-id="${
-            c.id
-          }">Eliminar</button>
+        <td class="td-actions">
+          <div class="actions-buttons">
+            <button class="btn btn-secondary btn-sm btn-editar-cliente" data-id="${c.id}">Editar</button>
+            <button class="btn btn-danger btn-sm btn-eliminar-cliente" data-id="${c.id}">Eliminar</button>
+          </div>
         </td>
       </tr>
     `;
@@ -84,9 +82,7 @@ const ClientesModule = {
     const to = Math.min(page * limit, total);
     return `
       <div class="pagination">
-        <span class="pagination-info">
-          Mostrando ${from}-${to} de ${total}
-        </span>
+        <span class="pagination-info">Mostrando ${from} a ${to} de ${total}</span>
         <div class="pagination-buttons">
           <button class="btn btn-secondary btn-sm" id="btn-prev-page" ${
             page <= 1 ? "disabled" : ""

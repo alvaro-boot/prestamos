@@ -83,6 +83,9 @@ const API = {
   },
 
   // Préstamos
+  getDashboard() {
+    return this.get("/prestamos/dashboard");
+  },
   getPrestamos(page = 1, limit = 10, clienteId, estado) {
     const params = new URLSearchParams({ page, limit });
     if (clienteId) params.set("cliente_id", clienteId);

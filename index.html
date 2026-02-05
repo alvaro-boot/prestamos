@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Sistema de Préstamos</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,12 +45,17 @@
 
     <!-- Pantalla principal (después del login) -->
     <div id="main-screen" class="screen">
-      <aside class="sidebar">
+      <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <span class="logo-text">Préstamos</span>
         </div>
         <nav class="sidebar-nav">
-          <a href="#" data-section="clientes" class="nav-link active">
+          <a href="#" data-section="dashboard" class="nav-link active">
+            <span class="nav-icon">📊</span>
+            Dashboard
+          </a>
+          <a href="#" data-section="clientes" class="nav-link">
             <span class="nav-icon">👥</span>
             Clientes
           </a>
@@ -66,7 +71,10 @@
       </aside>
       <main class="main-content">
         <header class="content-header">
-          <h2 id="page-title">Clientes</h2>
+          <button type="button" class="btn btn-ghost btn-icon-only sidebar-toggle" id="sidebar-toggle" aria-label="Menú">
+            <span class="hamburger-icon">☰</span>
+          </button>
+          <h2 id="page-title">Dashboard</h2>
         </header>
         <div id="content-area">
           <!-- El contenido se carga dinámicamente -->
@@ -89,6 +97,7 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
   <script src="js/clientes.js"></script>
   <script src="js/prestamos.js"></script>
   <script src="js/app.js"></script>

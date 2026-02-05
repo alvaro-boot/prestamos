@@ -57,26 +57,35 @@ const PrestamosModule = {
           </select>
           <button class="btn btn-primary" id="btn-nuevo-prestamo">+ Nuevo préstamo</button>
         </div>
-        <div class="table-container">
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Estado</th>
-                  <th>Fecha creación</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  items.length === 0
-                    ? '<tr><td colspan="5" class="empty-state"><span class="empty-state-icon">📋</span><h3>No hay préstamos</h3><p>Crea un préstamo para comenzar</p></td></tr>'
-                    : items.map((p) => this.rowPrestamo(p)).join("")
-                }
-              </tbody>
-            </table>
+        <div class="prestamos-list">
+          <div class="prestamos-table-wrap">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    items.length === 0
+                      ? '<tr><td colspan="5" class="empty-state"><span class="empty-state-icon">📋</span><h3>No hay préstamos</h3><p>Crea un préstamo para comenzar</p></td></tr>'
+                      : items.map((p) => this.rowPrestamo(p)).join("")
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="prestamos-cards-wrap">
+            ${
+              items.length === 0
+                ? '<div class="empty-state"><span class="empty-state-icon">📋</span><h3>No hay préstamos</h3><p>Crea un préstamo para comenzar</p></div>'
+                : items.map((p) => this.cardPrestamo(p)).join("")
+            }
           </div>
           ${this.renderPagination(total, page, limit)}
         </div>
@@ -104,19 +113,55 @@ const PrestamosModule = {
       p.estado
     )}</span></td>
         <td>${fecha}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${
-            p.id
-          }">Ver</button>
-          ${
-            p.estado === "ACTIVO"
-              ? `<button class="btn btn-primary btn-sm btn-registrar-pago" data-id="${p.id}">Registrar pago</button>
-          <button class="btn btn-secondary btn-sm btn-modificar-prestamo" data-id="${p.id}">Modificar</button>
-          <button class="btn btn-success btn-sm btn-saldar-prestamo" data-id="${p.id}" title="Marcar como pagado y saldar deuda">Marcar pagado</button>`
-              : ""
-          }
+        <td class="td-actions">
+          <div class="actions-buttons">
+            <button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>
+            ${
+              p.estado === "ACTIVO"
+                ? `<button class="btn btn-primary btn-sm btn-registrar-pago" data-id="${p.id}">Reg. pago</button>
+            <button class="btn btn-secondary btn-sm btn-modificar-prestamo" data-id="${p.id}">Modificar</button>
+            <button class="btn btn-success btn-sm btn-saldar-prestamo" data-id="${p.id}" title="Marcar como pagado">Marcar pagado</button>`
+                : ""
+            }
+          </div>
         </td>
       </tr>
+    `;
+  },
+
+  cardPrestamo(p) {
+    const cliente = p.cliente ? p.cliente.nombre : "-";
+    const fecha = p.fechaCreacion
+      ? new Date(p.fechaCreacion).toLocaleDateString("es")
+      : "-";
+    const badgeClass = `badge-${(p.estado || "").toLowerCase()}`;
+    return `
+      <div class="prestamo-list-card" data-id="${p.id}">
+        <div class="prestamo-list-card-header">
+          <span class="prestamo-list-card-id">#${p.id}</span>
+          <span class="badge ${badgeClass}">${this.escapeHtml(p.estado)}</span>
+        </div>
+        <div class="prestamo-list-card-body">
+          <div class="prestamo-list-card-row">
+            <span class="prestamo-list-card-label">Cliente</span>
+            <span>${this.escapeHtml(cliente)}</span>
+          </div>
+          <div class="prestamo-list-card-row">
+            <span class="prestamo-list-card-label">Fecha</span>
+            <span>${fecha}</span>
+          </div>
+        </div>
+        <div class="prestamo-list-card-actions">
+          <button class="btn btn-secondary btn-sm btn-ver-prestamo" data-id="${p.id}">Ver</button>
+          ${
+            p.estado === "ACTIVO"
+              ? `<button class="btn btn-primary btn-sm btn-registrar-pago" data-id="${p.id}">Reg. pago</button>
+          <button class="btn btn-secondary btn-sm btn-modificar-prestamo" data-id="${p.id}">Modificar</button>
+          <button class="btn btn-success btn-sm btn-saldar-prestamo" data-id="${p.id}">Marcar pagado</button>`
+              : ""
+          }
+        </div>
+      </div>
     `;
   },
 
@@ -126,7 +171,7 @@ const PrestamosModule = {
     const to = Math.min(page * limit, total);
     return `
       <div class="pagination">
-        <span class="pagination-info">Mostrando ${from}-${to} de ${total}</span>
+        <span class="pagination-info">Mostrando ${from} a ${to} de ${total}</span>
         <div class="pagination-buttons">
           <button class="btn btn-secondary btn-sm" id="btn-prev-page" ${
             page <= 1 ? "disabled" : ""
@@ -262,7 +307,14 @@ const PrestamosModule = {
           </div>
           <div id="cuota-auto-preview" style="color:var(--color-text-muted);font-size:0.9rem">Cuota calculada: $0</div>
           <div id="cuota-manual-wrap" style="display:none;margin-top:8px">
-            <input type="number" name="monto_cuota" min="1" step="1" placeholder="Ej: 80000" id="input-monto-cuota">
+            <div class="form-group" style="margin-bottom:8px">
+              <label style="font-size:0.85rem;color:var(--color-text-muted)">Monto mensual (a capital)</label>
+              <input type="text" id="input-capital-cuota" readonly style="background:var(--color-bg-card);cursor:not-allowed;opacity:0.9">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.85rem;color:var(--color-text-muted)">Interés (redondear)</label>
+              <input type="number" name="interes_cuota" min="0" step="1" placeholder="Ej: 8000" id="input-interes-cuota">
+            </div>
           </div>
         </div>
         <div class="form-group">
@@ -287,15 +339,22 @@ const PrestamosModule = {
         ? parseInt(freqOpt.dataset.cuotas || "1")
         : 1;
       const numCuotas = plazo * cuotasPorMes;
+      const capitalPorCuota = numCuotas > 0 ? monto / numCuotas : 0;
       const totalInteres = monto * (interes / 100) * plazo;
-      const totalAPagar = monto + totalInteres;
-      const cuotaCalc = numCuotas > 0 ? totalAPagar / numCuotas : 0;
+      const interesPorCuota = numCuotas > 0 ? totalInteres / numCuotas : 0;
+      const cuotaCalc = capitalPorCuota + interesPorCuota;
       document.getElementById("cuota-auto-preview").textContent =
         "Cuota calculada: $" + this.formatNumber(cuotaCalc);
-      const manualInput = document.getElementById("input-monto-cuota");
-      if (form.cuota_modo.value === "manual" && !manualInput.value) {
-        manualInput.placeholder =
-          "Ej: " + Math.round(cuotaCalc).toLocaleString();
+      if (form.cuota_modo.value === "manual") {
+        document.getElementById("input-capital-cuota").value =
+          "$" + this.formatNumber(Math.round(capitalPorCuota * 100) / 100);
+        const interesInput = document.getElementById("input-interes-cuota");
+        const interesRedondeado = Math.round(interesPorCuota * 100) / 100;
+        if (!interesInput.value || interesInput.dataset.auto === "1") {
+          interesInput.value = interesRedondeado || "";
+          interesInput.dataset.auto = "1";
+        }
+        interesInput.placeholder = "Ej: " + Math.round(interesPorCuota).toLocaleString();
       }
     };
 
@@ -305,6 +364,9 @@ const PrestamosModule = {
         ?.addEventListener("input", updateCuotaPreview);
     });
     form.frecuencia_pago_id?.addEventListener("change", updateCuotaPreview);
+    document.getElementById("input-interes-cuota")?.addEventListener("input", () => {
+      document.getElementById("input-interes-cuota").dataset.auto = "0";
+    });
 
     form.querySelectorAll('input[name="cuota_modo"]').forEach((r) => {
       r.addEventListener("change", () => {
@@ -315,7 +377,11 @@ const PrestamosModule = {
         document.getElementById("cuota-manual-wrap").style.display = isManual
           ? "block"
           : "none";
-        if (isManual) updateCuotaPreview();
+        if (isManual) {
+          document.getElementById("input-interes-cuota").dataset.auto = "1";
+          document.getElementById("input-interes-cuota").value = "";
+          updateCuotaPreview();
+        }
       });
     });
     updateCuotaPreview();
@@ -331,8 +397,22 @@ const PrestamosModule = {
         fecha_inicio: form.fecha_inicio.value,
       };
       if (form.cuota_modo.value === "manual") {
-        const val = parseFloat(form.monto_cuota?.value);
-        if (val > 0) data.monto_cuota = val;
+        const monto = parseFloat(form.monto.value) || 0;
+        const interes = parseFloat(form.interes_porcentaje.value) || 0;
+        const plazo = parseInt(form.plazo_meses.value) || 1;
+        const freqOpt = form.frecuencia_pago_id.selectedOptions[0];
+        const cuotasPorMes = freqOpt
+          ? parseInt(freqOpt.dataset.cuotas || "1")
+          : 1;
+        const numCuotas = plazo * cuotasPorMes;
+        const capitalPorCuota = numCuotas > 0 ? monto / numCuotas : 0;
+        const totalInteres = monto * (interes / 100) * plazo;
+        const interesCalculado = numCuotas > 0 ? totalInteres / numCuotas : 0;
+        const interesInput = parseFloat(form.interes_cuota?.value);
+        const interesFinal = !isNaN(interesInput) && interesInput >= 0
+          ? interesInput
+          : Math.round(interesCalculado * 100) / 100;
+        data.monto_cuota = Math.round((capitalPorCuota + interesFinal) * 100) / 100;
       }
       try {
         await API.createPrestamo(data);

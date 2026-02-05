@@ -7,9 +7,10 @@ const App = {
     this.bindLogout();
     this.bindNavigation();
     this.bindModal();
+    this.bindSidebarToggle();
 
     if (Auth.checkAndRedirect()) {
-      const section = window.location.hash.slice(1) || "clientes";
+      const section = window.location.hash.slice(1) || "dashboard";
       this.loadSection(section);
     }
   },
@@ -84,20 +85,46 @@ const App = {
       link.addEventListener("click", (e) => {
         e.preventDefault();
         const section = link.dataset.section;
-        document
-          .querySelectorAll(".nav-link")
-          .forEach((l) => l.classList.remove("active"));
-        link.classList.add("active");
+        window.location.hash = section;
         this.loadSection(section);
+        this.closeSidebarMobile();
       });
+    });
+    window.addEventListener("hashchange", () => {
+      const section = window.location.hash.slice(1) || "dashboard";
+      this.loadSection(section);
     });
   },
 
-  loadSection(section) {
-    document.getElementById("page-title").textContent =
-      section === "clientes" ? "Clientes" : "Préstamos";
+  bindSidebarToggle() {
+    const toggle = document.getElementById("sidebar-toggle");
+    const sidebar = document.getElementById("sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    const closeSidebar = () => {
+      document.getElementById("sidebar")?.classList.remove("sidebar-open");
+      document.getElementById("sidebar-backdrop")?.classList.remove("active");
+      document.body.style.overflow = "";
+    };
+    toggle?.addEventListener("click", () => {
+      sidebar?.classList.toggle("sidebar-open");
+      backdrop?.classList.toggle("active");
+      document.body.style.overflow = document.getElementById("sidebar")?.classList.contains("sidebar-open") ? "hidden" : "";
+    });
+    backdrop?.addEventListener("click", closeSidebar);
+    this.closeSidebarMobile = closeSidebar;
+  },
 
-    if (section === "clientes") {
+  loadSection(section) {
+    const titles = { dashboard: "Dashboard", clientes: "Clientes", prestamos: "Préstamos" };
+    document.getElementById("page-title").textContent = titles[section] || "Dashboard";
+
+    document.querySelectorAll(".nav-link").forEach((l) => {
+      l.classList.toggle("active", l.dataset.section === section);
+    });
+
+    if (section === "dashboard") {
+      DashboardModule.render();
+    } else if (section === "clientes") {
       ClientesModule.render();
     } else if (section === "prestamos") {
       PrestamosModule.render();
@@ -130,15 +157,11 @@ const App = {
   },
 
   toast(message) {
+    const existing = document.querySelector(".toast-msg");
+    if (existing) existing.remove();
     const toast = document.createElement("div");
-    toast.className = "toast";
+    toast.className = "toast toast-msg";
     toast.textContent = message;
-    toast.style.cssText = `
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--color-bg-card); border: 1px solid var(--color-border);
-      padding: 12px 20px; border-radius: 8px; z-index: 2000;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4); font-size: 0.9rem;
-    `;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
   },
@@ -147,14 +170,8 @@ const App = {
     const existing = document.querySelector(".error-toast");
     if (existing) existing.remove();
     const toast = document.createElement("div");
-    toast.className = "error-toast";
+    toast.className = "toast error-toast toast-msg";
     toast.textContent = message;
-    toast.style.cssText = `
-      position: fixed; bottom: 24px; right: 24px;
-      background: rgba(244,33,46,0.2); color: var(--color-danger);
-      border: 1px solid var(--color-danger); padding: 12px 20px;
-      border-radius: 8px; z-index: 2000; font-size: 0.9rem;
-    `;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 5000);
   },
