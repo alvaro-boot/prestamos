@@ -320,11 +320,11 @@ const PrestamosModule = {
             </div>
             <div class="form-group" style="margin-bottom:8px">
               <label style="font-size:0.85rem;color:var(--color-text-muted)">Interés (redondear)</label>
-              <input type="number" name="interes_cuota" min="0" step="1" placeholder="Ej: 8000" id="input-interes-cuota">
+              <input type="number" name="interes_cuota" min="0" step="0.01" placeholder="Ej: 8000" id="input-interes-cuota">
             </div>
             <div class="form-group" style="margin-bottom:0">
               <label style="font-size:0.85rem;color:var(--color-text-muted)">Cuota total</label>
-              <input type="number" name="cuota_total" min="0" step="1" placeholder="Ej: 58000" id="input-cuota-total" title="Suma de capital + interés. Si lo redondeas, la diferencia se suma al interés.">
+              <input type="number" name="cuota_total" min="0" step="0.01" placeholder="Ej: 58000" id="input-cuota-total" title="Suma de capital + interés. Si lo redondeas, la diferencia se suma al interés.">
             </div>
           </div>
         </div>
