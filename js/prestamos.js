@@ -318,9 +318,13 @@ const PrestamosModule = {
               <label style="font-size:0.85rem;color:var(--color-text-muted)">Monto mensual (a capital)</label>
               <input type="text" id="input-capital-cuota" readonly style="background:var(--color-bg-card);cursor:not-allowed;opacity:0.9">
             </div>
-            <div class="form-group" style="margin-bottom:0">
+            <div class="form-group" style="margin-bottom:8px">
               <label style="font-size:0.85rem;color:var(--color-text-muted)">Interés (redondear)</label>
               <input type="number" name="interes_cuota" min="0" step="1" placeholder="Ej: 8000" id="input-interes-cuota">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.85rem;color:var(--color-text-muted)">Cuota total</label>
+              <input type="number" name="cuota_total" min="0" step="1" placeholder="Ej: 58000" id="input-cuota-total" title="Suma de capital + interés. Si lo redondeas, la diferencia se suma al interés.">
             </div>
           </div>
         </div>
@@ -353,15 +357,22 @@ const PrestamosModule = {
       document.getElementById("cuota-auto-preview").textContent =
         "Cuota calculada: $" + this.formatNumber(cuotaCalc);
       if (form.cuota_modo.value === "manual") {
-        document.getElementById("input-capital-cuota").value =
-          "$" + this.formatNumber(Math.round(capitalPorCuota * 100) / 100);
+        const capitalInput = document.getElementById("input-capital-cuota");
         const interesInput = document.getElementById("input-interes-cuota");
+        const cuotaTotalInput = document.getElementById("input-cuota-total");
+        const capitalRedondeado = Math.round(capitalPorCuota * 100) / 100;
+        capitalInput.value = "$" + this.formatNumber(capitalRedondeado);
+        capitalInput.dataset.valor = capitalRedondeado;
         const interesRedondeado = Math.round(interesPorCuota * 100) / 100;
         if (!interesInput.value || interesInput.dataset.auto === "1") {
           interesInput.value = interesRedondeado || "";
           interesInput.dataset.auto = "1";
         }
         interesInput.placeholder = "Ej: " + Math.round(interesPorCuota).toLocaleString();
+        const interesActual = parseFloat(interesInput.value) || 0;
+        const cuotaTotal = Math.round((capitalRedondeado + interesActual) * 100) / 100;
+        cuotaTotalInput.value = cuotaTotal || "";
+        cuotaTotalInput.placeholder = "Ej: " + Math.round(capitalRedondeado + interesRedondeado).toLocaleString();
       }
     };
 
@@ -372,7 +383,22 @@ const PrestamosModule = {
     });
     form.frecuencia_pago_id?.addEventListener("change", updateCuotaPreview);
     document.getElementById("input-interes-cuota")?.addEventListener("input", () => {
-      document.getElementById("input-interes-cuota").dataset.auto = "0";
+      const interesInput = document.getElementById("input-interes-cuota");
+      interesInput.dataset.auto = "0";
+      const capital = parseFloat(document.getElementById("input-capital-cuota")?.dataset.valor) || 0;
+      const interes = parseFloat(interesInput.value) || 0;
+      document.getElementById("input-cuota-total").value = Math.round((capital + interes) * 100) / 100 || "";
+    });
+    document.getElementById("input-cuota-total")?.addEventListener("input", () => {
+      const cuotaTotalInput = document.getElementById("input-cuota-total");
+      const capital = parseFloat(document.getElementById("input-capital-cuota")?.dataset.valor) || 0;
+      const cuotaTotal = parseFloat(cuotaTotalInput.value) || 0;
+      if (cuotaTotal >= capital) {
+        const nuevoInteres = Math.round((cuotaTotal - capital) * 100) / 100;
+        const interesInput = document.getElementById("input-interes-cuota");
+        interesInput.value = nuevoInteres;
+        interesInput.dataset.auto = "0";
+      }
     });
 
     form.querySelectorAll('input[name="cuota_modo"]').forEach((r) => {
@@ -387,6 +413,7 @@ const PrestamosModule = {
         if (isManual) {
           document.getElementById("input-interes-cuota").dataset.auto = "1";
           document.getElementById("input-interes-cuota").value = "";
+          document.getElementById("input-cuota-total").value = "";
           updateCuotaPreview();
         }
       });
@@ -415,11 +442,14 @@ const PrestamosModule = {
         const capitalPorCuota = numCuotas > 0 ? monto / numCuotas : 0;
         const totalInteres = monto * (interes / 100) * plazo;
         const interesCalculado = numCuotas > 0 ? totalInteres / numCuotas : 0;
+        const cuotaTotalInput = parseFloat(form.cuota_total?.value);
         const interesInput = parseFloat(form.interes_cuota?.value);
         const interesFinal = !isNaN(interesInput) && interesInput >= 0
           ? interesInput
           : Math.round(interesCalculado * 100) / 100;
-        data.monto_cuota = Math.round((capitalPorCuota + interesFinal) * 100) / 100;
+        data.monto_cuota = !isNaN(cuotaTotalInput) && cuotaTotalInput > 0
+          ? Math.round(cuotaTotalInput * 100) / 100
+          : Math.round((capitalPorCuota + interesFinal) * 100) / 100;
       }
       try {
         await API.createPrestamo(data);
